@@ -1,0 +1,25 @@
+{
+  "name": "asko/router",
+  "description": "A minimal PHP router with configuration-free dependency injection",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Asko\\Router\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Asko Nõmm",
+      "email": "asko@repl.ee"
+    }
+  ],
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": false
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10"
+  }
+}
