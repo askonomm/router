@@ -17,6 +17,8 @@ class Router
     }
 
     /**
+     * Normalizes the path by removing leading and trailing slashes.
+     * 
      * @param string $path
      * @return string
      */
@@ -111,8 +113,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param Route $route
      * @return array
      */
@@ -128,8 +128,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -141,8 +139,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -154,8 +150,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -167,8 +161,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -180,8 +172,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -193,8 +183,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -206,8 +194,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -219,8 +205,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
@@ -232,8 +216,6 @@ class Router
     }
 
     /**
-     * Undocumented function
-     *
      * @param string $path
      * @param string $controller
      * @param string $action
