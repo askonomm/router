@@ -75,9 +75,10 @@ class Router
     private function match(): ?Route
     {
         foreach ($this->routes as $route) {
-            if ($this->match_path($route->path) &&
-                $this->method === $route->method) {
-                return $route;
+            if ($this->match_path($route->path)) {
+                if ($route->method === $this->method || $route->method === "*") {
+                    return $route;
+                }
             }
         }
 

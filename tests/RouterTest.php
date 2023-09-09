@@ -117,4 +117,23 @@ final class RouterTest extends TestCase
 
         $this->assertSame("Hello from DI, 123", $router->dispatch());
     }
+
+    public function testAnyRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "POST";
+
+        $router = new Router();
+        $router->any("/test", RouterTestController::class, "index");
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->any("/test", RouterTestController::class, "index");
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
 }
