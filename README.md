@@ -13,7 +13,7 @@ class ExampleController
 {
     public function hello(string $who)
     {
-        echo "Hello, ${who}";
+        echo "Hello, {$who}";
     }
 }
 
@@ -37,7 +37,7 @@ class ExampleController
 {
     public function hello(SomeDependency $dep, string $who)
     {
-        echo "Hello, ${who}";
+        echo "Hello, {$who}";
     }
 }
 
