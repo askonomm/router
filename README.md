@@ -2,6 +2,12 @@
 
 A PHP router with built-in configuration-free dependency injection.
 
+## Install
+
+```
+composer require asko/router
+```
+
 ## Usage
 
 The most basic usage example looks like this:
