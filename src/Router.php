@@ -9,6 +9,7 @@ class Router
     private string $path;
     private string $method;
     private array $routes;
+    private array $non_injectables = ["string", "int", "float"];
 
     public function __construct()
     {
@@ -75,11 +76,13 @@ class Router
     private function match(): ?Route
     {
         foreach ($this->routes as $route) {
-            if ($this->match_path($route->path)) {
-                if ($route->method === $this->method || $route->method === "*") {
-                    return $route;
-                }
+            $match_method = $route->method === $this->method || $route->method === "*";
+
+            if ($this->match_path($route->path) && $match_method) {
+                return $route;
             }
+
+            continue;
         }
 
         return null;
@@ -97,7 +100,7 @@ class Router
         $split_route_path = explode("/", $path);
         $index = null;
 
-        for($i = 0; $i < count($split_route_path); $i++) {
+        for ($i = 0; $i < count($split_route_path); $i++) {
             $route_path_part = $split_route_path[$i];
 
             if (
@@ -126,6 +129,49 @@ class Router
         } catch (\ReflectionException) {
             return [];
         }
+    }
+
+    /**
+     * @param array $method_params
+     * @return array
+     */
+    private function compose_injectables(array $method_params): array
+    {
+        $injectables = [];
+
+        foreach ($method_params as $param) {
+            $param_type = $param->getType();
+
+            if (!in_array($param_type->getName(), $this->non_injectables)) {
+                $param_class_name = $param_type->getName();
+
+                // Thought: recursive constructor DI is technically possible, 
+                // should we do it?
+                $injectables[] = new $param_class_name;
+            }
+        }
+
+        return $injectables;
+    }
+
+    /**
+     * @param Route $route
+     * @param array $method_params
+     * @return array
+     */
+    private function compose_parameters(Route $route, array $method_params): array
+    {
+        $parameters = [];
+
+        foreach ($method_params as $method_param) {
+            $param_type = $method_param->getType();
+
+            if (in_array($param_type->getName(), $this->non_injectables)) {
+                $parameters[] = $this->get_path_param($route, $method_param->getName());
+            }
+        }
+
+        return $parameters;
     }
 
     /**
@@ -250,24 +296,8 @@ class Router
         }
 
         $method_params = $this->get_method_params($route);
-
-        // Compose injectables, which are classes typehinted in the method, 
-        // and parameters, which are the actual values from the URL path.
-        $non_injectables = ["string", "int", "float"];
-        $injectables = [];
-        $parameters = [];
-
-        foreach($method_params as $method_param) {
-            $param_type = $method_param->getType();
-
-            if (!in_array($param_type->getName(), $non_injectables)) {
-                $param_class_name = $param_type->getName();
-                $injectables[] = new $param_class_name;
-            } else {
-                $parameters[] = $this->get_path_param($route, $method_param->getName());
-            }
-        }
-        
+        $injectables = $this->compose_injectables($method_params);
+        $parameters = $this->compose_parameters($route, $method_params);
         $controller_instance = new $route->controller;
 
         // Method not found
@@ -276,7 +306,7 @@ class Router
         }
 
         return call_user_func_array(
-            [$controller_instance, $route->action], 
+            [$controller_instance, $route->action],
             [...$injectables, ...$parameters]
         );
     }
