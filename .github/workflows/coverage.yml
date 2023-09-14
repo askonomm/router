@@ -15,7 +15,7 @@ jobs:
           php-version: "8.2"
 
       - name: Install dependencies
-        run: composer self-update && composer install && composer dump-autoload
+        run: composer self-update && composer install && composer dump-autoload -o
 
       - name: Run tests and collect coverage
         run: vendor/bin/phpunit --coverage-clover coverage.xml .
