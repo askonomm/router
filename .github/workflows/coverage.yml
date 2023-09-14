@@ -13,12 +13,13 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
+          coverage: xdebug
 
-      - name: Install dependencies
-        run: composer self-update && composer install && composer dump-autoload -o
+      - name: Set-up Composer
+        uses: php-actions/composer@v6
 
       - name: Run tests and collect coverage
-        run: vendor/bin/phpunit --coverage-clover coverage.xml .
+        run: ./vendor/bin/phpunit --coverage-clover coverage.xml .
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
