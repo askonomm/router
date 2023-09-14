@@ -5,37 +5,80 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Asko\Router\Router;
 
+class RouterTestDIDI
+{
+    public function test()
+    {
+        return "Hello from DI with DI";
+    }
+}
+
+class RouterTestDIWithDI
+{
+    public function __construct(public RouterTestDIDI $di)
+    {
+    }
+    public function test()
+    {
+        return $this->di->test();
+    }
+}
+
 class RouterTestDI
 {
-    public function test() {
+    public function test()
+    {
         return "Hello from DI";
     }
 }
 
 class RouterTestController
 {
-    public function index() {
+    private ?RouterTestDI $di = null;
+
+    function __construct(RouterTestDI $di)
+    {
+        $this->di = $di;
+    }
+
+    public function index()
+    {
         return "Hello, World!";
     }
 
-    public function test_parameter(string $id) {
+    public function test_parameter(string $id)
+    {
         return $id;
     }
 
-    public function test_multiple_parameters(string $id, string $id2) {
+    public function test_multiple_parameters(string $id, string $id2)
+    {
         return $id . "." . $id2;
     }
 
-    public function test_multiple_parameters2(string $id2, string $id) {
+    public function test_multiple_parameters2(string $id2, string $id)
+    {
         return $id . "." . $id2;
     }
 
-    public function test_di(RouterTestDI $di) {
+    public function test_di(RouterTestDI $di)
+    {
         return $di->test();
     }
 
-    public function test_di_with_parameter(RouterTestDI $di, int $id) {
+    public function test_di_with_parameter(RouterTestDI $di, int $id)
+    {
         return $di->test() . ", " . $id;
+    }
+
+    public function test_di_from_constructor()
+    {
+        return $this->di->test();
+    }
+
+    public function test_di_di_from_constructor(RouterTestDIWithDI $di)
+    {
+        return $di->test();
     }
 }
 
@@ -96,7 +139,7 @@ final class RouterTest extends TestCase
         $this->assertSame("123.456", $router->dispatch());
     }
 
-    public function testRouteWithDI(): void 
+    public function testRouteWithDI(): void
     {
         $_SERVER["REQUEST_URI"] = "/test";
         $_SERVER["REQUEST_METHOD"] = "GET";
@@ -116,6 +159,28 @@ final class RouterTest extends TestCase
         $router->get("/test/{id}", RouterTestController::class, "test_di_with_parameter");
 
         $this->assertSame("Hello from DI, 123", $router->dispatch());
+    }
+
+    public function testRouteWithConstructorDI(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test", RouterTestController::class, "test_di_from_constructor");
+
+        $this->assertSame("Hello from DI", $router->dispatch());
+    }
+
+    public function testRouteWithConstructorDIDI(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test", RouterTestController::class, "test_di_di_from_constructor");
+
+        $this->assertSame("Hello from DI with DI", $router->dispatch());
     }
 
     public function testAnyRoute(): void

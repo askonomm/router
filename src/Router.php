@@ -117,6 +117,25 @@ class Router
     }
 
     /**
+     * @param string $class
+     * @return array
+     */
+    private function get_constructor_params(string $class): array
+    {
+        $reflection = new \ReflectionClass($class);
+
+        try {
+            if ($reflection->getConstructor()) {
+                return $reflection->getConstructor()->getParameters();
+            } else {
+                return [];
+            }
+        } catch (\ReflectionException) {
+            return [];
+        }
+    }
+
+    /**
      * @param Route $route
      * @return array
      */
@@ -143,11 +162,7 @@ class Router
             $param_type = $param->getType();
 
             if (!in_array($param_type->getName(), $this->non_injectables)) {
-                $param_class_name = $param_type->getName();
-
-                // Thought: recursive constructor DI is technically possible, 
-                // should we do it?
-                $injectables[] = new $param_class_name;
+                $injectables[] = $this->init_class($param_type->getName());
             }
         }
 
@@ -172,6 +187,25 @@ class Router
         }
 
         return $parameters;
+    }
+
+    /**
+     * @param string $class
+     * @return object
+     */
+    private function init_class(string $class): object
+    {
+        $constructor_params = $this->get_constructor_params($class);
+        $injectables = $this->compose_injectables($constructor_params);
+
+        if (empty($injectables)) {
+            return new $class;
+        } else {
+            $controller_class = new \ReflectionClass($class);
+            $instance = $controller_class->newInstanceArgs($injectables);
+
+            return $instance;
+        }
     }
 
     /**
@@ -298,15 +332,15 @@ class Router
         $method_params = $this->get_method_params($route);
         $injectables = $this->compose_injectables($method_params);
         $parameters = $this->compose_parameters($route, $method_params);
-        $controller_instance = new $route->controller;
+        $controller = $this->init_class($route->controller);
 
         // Method not found
-        if (!is_callable([$controller_instance, $route->action])) {
+        if (!is_callable([$controller, $route->action])) {
             return null;
         }
 
         return call_user_func_array(
-            [$controller_instance, $route->action],
+            [$controller, $route->action],
             [...$injectables, ...$parameters]
         );
     }
