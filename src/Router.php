@@ -84,8 +84,6 @@ class Router
             if ($this->match_path($route->path) && $match_method) {
                 return $route;
             }
-
-            continue;
         }
 
         return null;
@@ -127,15 +125,11 @@ class Router
     {
         $reflection = new \ReflectionClass($class);
 
-        try {
-            if ($reflection->getConstructor()) {
-                return $reflection->getConstructor()->getParameters();
-            } else {
-                return [];
-            }
-        } catch (\ReflectionException) {
-            return [];
+        if ($reflection->getConstructor()) {
+            return $reflection->getConstructor()->getParameters();
         }
+
+        return [];
     }
 
     /**
@@ -144,12 +138,13 @@ class Router
      */
     private function get_method_params(string $class, string $method): array
     {
-        try {
-            $reflection = new \ReflectionClass($class);
+        $reflection = new \ReflectionClass($class);
+
+        if ($reflection->getMethod($method)) {
             return $reflection->getMethod($method)->getParameters();
-        } catch (\ReflectionException) {
-            return [];
         }
+
+        return [];
     }
 
     /**
@@ -158,12 +153,9 @@ class Router
      */
     private function get_fn_params(string|Closure $fn): array
     {
-        try {
-            $reflection = new \ReflectionFunction($fn);
-            return $reflection->getParameters();
-        } catch (\ReflectionException) {
-            return [];
-        }
+        $reflection = new \ReflectionFunction($fn);
+
+        return $reflection->getParameters();
     }
 
     /**
@@ -403,7 +395,6 @@ class Router
         }
 
         // if we have a controller, check if its method exists
-        // todo: return MethodNotFoundException
         if (is_array($route->callable) && !method_exists($route->callable[0], $route->callable[1])) {
             throw new \Exception("Method {$route->callable[0]}::{$route->callable[1]} not found.");
         }
@@ -424,7 +415,6 @@ class Router
         }
 
         // If we have a function name, check if it exists
-        // todo: return FunctionNotFoundException
         if (is_string($route->callable) && !function_exists($route->callable)) {
             throw new \Exception("Function {$route->callable} not found.");
         }

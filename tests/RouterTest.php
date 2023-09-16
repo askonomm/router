@@ -285,4 +285,63 @@ final class RouterTest extends TestCase
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }
+
+    public function testNoControllerFound(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+
+        $this->expectExceptionMessage("Class /SomeControllerGoesHere not found.");
+        $router->get("/test", ["/SomeControllerGoesHere", "not_found"]);
+        $router->dispatch();
+    }
+
+    public function testNoControllerMethodFound(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+
+        $this->expectExceptionMessage("Method RouteTestController::not_found not found.");
+        $router->get("/test", [RouteTestController::class, "not_found"]);
+        $router->dispatch();
+    }
+
+    public function testNoFunctionFound(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+
+        $this->expectExceptionMessage("Function test_fn not found.");
+        $router->get("/test", "test_fn");
+        $router->dispatch();
+    }
+
+    public function testNoRoutesFound(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+
+        $this->assertSame(null, $router->dispatch());
+    }
+
+    public function testNoRouteFound(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/", function () {
+            return "Hello, World!";
+        });
+
+        $this->assertSame(null, $router->dispatch());
+    }
 }
