@@ -80,6 +80,11 @@ class RouterTestController
     {
         return $di->test();
     }
+
+    public function not_found()
+    {
+        return "Not found.";
+    }
 }
 
 final class RouterTest extends TestCase
@@ -90,7 +95,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/", RouterTestController::class, "index");
+        $router->get("/", [RouterTestController::class, "index"]);
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }
@@ -101,7 +106,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", RouterTestController::class, "index");
+        $router->get("/test", [RouterTestController::class, "index"]);
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }
@@ -112,7 +117,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test/{id}", RouterTestController::class, "test_parameter");
+        $router->get("/test/{id}", [RouterTestController::class, "test_parameter"]);
 
         $this->assertSame("123", $router->dispatch());
     }
@@ -123,7 +128,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test/{id}/and/{id2}", RouterTestController::class, "test_multiple_parameters");
+        $router->get("/test/{id}/and/{id2}", [RouterTestController::class, "test_multiple_parameters"]);
 
         $this->assertSame("123.456", $router->dispatch());
     }
@@ -134,7 +139,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test/{id}/and/{id2}", RouterTestController::class, "test_multiple_parameters2");
+        $router->get("/test/{id}/and/{id2}", [RouterTestController::class, "test_multiple_parameters2"]);
 
         $this->assertSame("123.456", $router->dispatch());
     }
@@ -145,7 +150,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", RouterTestController::class, "test_di");
+        $router->get("/test", [RouterTestController::class, "test_di"]);
 
         $this->assertSame("Hello from DI", $router->dispatch());
     }
@@ -156,7 +161,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test/{id}", RouterTestController::class, "test_di_with_parameter");
+        $router->get("/test/{id}", [RouterTestController::class, "test_di_with_parameter"]);
 
         $this->assertSame("Hello from DI, 123", $router->dispatch());
     }
@@ -167,7 +172,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", RouterTestController::class, "test_di_from_constructor");
+        $router->get("/test", [RouterTestController::class, "test_di_from_constructor"]);
 
         $this->assertSame("Hello from DI", $router->dispatch());
     }
@@ -178,7 +183,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", RouterTestController::class, "test_di_di_from_constructor");
+        $router->get("/test", [RouterTestController::class, "test_di_di_from_constructor"]);
 
         $this->assertSame("Hello from DI with DI", $router->dispatch());
     }
@@ -189,7 +194,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "POST";
 
         $router = new Router();
-        $router->any("/test", RouterTestController::class, "index");
+        $router->any("/test", [RouterTestController::class, "index"]);
 
         $this->assertSame("Hello, World!", $router->dispatch());
 
@@ -197,7 +202,86 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->any("/test", RouterTestController::class, "index");
+        $router->any("/test", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testNotFoundRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->not_found([RouterTestController::class, "not_found"]);
+
+        $this->assertSame("Not found.", $router->dispatch());
+    }
+
+    public function testClosureRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test", function () {
+            return "Hello, World!";
+        });
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testClosureRouteWithParameter(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/hello/world";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/hello/{who}", function (string $who) {
+            return "Hello, {$who}!";
+        });
+
+        $this->assertSame("Hello, world!", $router->dispatch());
+    }
+
+    public function testClosureRouteWithDI(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test", function (RouterTestDI $di) {
+            return $di->test();
+        });
+
+        $this->assertSame("Hello from DI", $router->dispatch());
+    }
+
+    public function testClosureRouteWithDIAndParameter(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test/123";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test/{id}", function (RouterTestDI $di, int $id) {
+            return $di->test() . ", " . $id;
+        });
+
+        $this->assertSame("Hello from DI, 123", $router->dispatch());
+    }
+
+    public function testFunctionRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        function test_function()
+        {
+            return "Hello, World!";
+        }
+
+        $router = new Router();
+        $router->get("/test", "test_function");
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }

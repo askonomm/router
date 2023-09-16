@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Asko\Router;
 
+use Closure;
+
 class Router
 {
     private string $path;
     private string $method;
-    private array $routes;
+    private array $routes = [];
+    private ?Route $not_found_route = null;
     private array $non_injectables = ["string", "int", "float"];
 
     public function __construct()
@@ -139,12 +142,25 @@ class Router
      * @param Route $route
      * @return array
      */
-    private function get_method_params(Route $route): array
+    private function get_method_params(string $class, string $method): array
     {
-        $reflection = new \ReflectionClass($route->controller);
-
         try {
-            return $reflection->getMethod($route->action)->getParameters();
+            $reflection = new \ReflectionClass($class);
+            return $reflection->getMethod($method)->getParameters();
+        } catch (\ReflectionException) {
+            return [];
+        }
+    }
+
+    /**
+     * @param string $fn
+     * @return array
+     */
+    private function get_fn_params(string|Closure $fn): array
+    {
+        try {
+            $reflection = new \ReflectionFunction($fn);
+            return $reflection->getParameters();
         } catch (\ReflectionException) {
             return [];
         }
@@ -214,9 +230,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function get(string $path, string $controller, string $action): void
+    public function get(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "GET");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "GET"
+        );
     }
 
     /**
@@ -225,9 +245,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function head(string $path, string $controller, string $action): void
+    public function head(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "HEAD");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "HEAD"
+        );
     }
 
     /**
@@ -236,9 +260,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function post(string $path, string $controller, string $action): void
+    public function post(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "POST");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "POST"
+        );
     }
 
     /**
@@ -247,9 +275,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function put(string $path, string $controller, string $action): void
+    public function put(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "PUT");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "PUT"
+        );
     }
 
     /**
@@ -258,9 +290,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function delete(string $path, string $controller, string $action): void
+    public function delete(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "DELETE");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "DELETE"
+        );
     }
 
     /**
@@ -269,9 +305,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function patch(string $path, string $controller, string $action): void
+    public function patch(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "PATCH");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "PATCH"
+        );
     }
 
     /**
@@ -280,9 +320,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function options(string $path, string $controller, string $action): void
+    public function options(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "OPTIONS");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "OPTIONS"
+        );
     }
 
     /**
@@ -291,9 +335,13 @@ class Router
      * @param string $action
      * @return void
      */
-    public function trace(string $path, string $controller, string $action): void
+    public function trace(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "TRACE");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "TRACE"
+        );
     }
 
     /**
@@ -302,9 +350,26 @@ class Router
      * @param string $action
      * @return void
      */
-    public function any(string $path, string $controller, string $action): void
+    public function any(string $path, string|array|Closure $callable): void
     {
-        $this->routes[] = new Route($path, $controller, $action, "*");
+        $this->routes[] = new Route(
+            path: $path,
+            callable: $callable,
+            method: "*"
+        );
+    }
+
+    /**
+     * @param string|array|Closure $callable
+     * @return void
+     */
+    public function not_found(string|array|Closure $callable): void
+    {
+        $this->not_found_route = new Route(
+            path: "",
+            callable: $callable,
+            method: "*"
+        );
     }
 
     /**
@@ -314,34 +379,82 @@ class Router
     {
         // There are no routes
         if (empty($this->routes)) {
-            return null;
+            if ($this->not_found_route) {
+                $route = $this->not_found_route;
+            } else {
+                return null;
+            }
         }
 
         $route = $this->match();
 
         // Route not found
         if (!$route) {
-            return null;
+            if ($this->not_found_route) {
+                $route = $this->not_found_route;
+            } else {
+                return null;
+            }
         }
 
-        // Controller not found
-        if (!class_exists($route->controller)) {
-            return null;
+        // If we have a controller, check if it exists
+        if (is_array($route->callable) && !class_exists($route->callable[0])) {
+            throw new \Exception("Class {$route->callable[0]} not found.");
         }
 
-        $method_params = $this->get_method_params($route);
-        $injectables = $this->compose_injectables($method_params);
-        $parameters = $this->compose_parameters($route, $method_params);
-        $controller = $this->init_class($route->controller);
-
-        // Method not found
-        if (!is_callable([$controller, $route->action])) {
-            return null;
+        // if we have a controller, check if its method exists
+        // todo: return MethodNotFoundException
+        if (is_array($route->callable) && !method_exists($route->callable[0], $route->callable[1])) {
+            throw new \Exception("Method {$route->callable[0]}::{$route->callable[1]} not found.");
         }
 
-        return call_user_func_array(
-            [$controller, $route->action],
-            [...$injectables, ...$parameters]
-        );
+        // And if both exist, we proceed with controller and its method
+        if (is_array($route->callable)) {
+            [$controller, $action] = $route->callable;
+            $controller_instance = $this->init_class($controller);
+            $method_params = $this->get_method_params($controller, $action);
+
+            return call_user_func_array(
+                [$controller_instance, $action],
+                [
+                    ...$this->compose_injectables($method_params),
+                    ...$this->compose_parameters($route, $method_params)
+                ]
+            );
+        }
+
+        // If we have a function name, check if it exists
+        // todo: return FunctionNotFoundException
+        if (is_string($route->callable) && !function_exists($route->callable)) {
+            throw new \Exception("Function {$route->callable} not found.");
+        }
+
+        // And if it exists, we proceed with the function
+        if (is_string($route->callable)) {
+            $fn_params = $this->get_fn_params($route->callable);
+
+            return call_user_func_array(
+                $route->callable,
+                [
+                    ...$this->compose_injectables($fn_params),
+                    ...$this->compose_parameters($route, $fn_params)
+                ]
+            );
+        }
+
+        // If we have a closure, we proceed with the closure
+        if ($route->callable instanceof \Closure) {
+            $fn_params = $this->get_fn_params($route->callable);
+
+            return call_user_func_array(
+                $route->callable,
+                [
+                    ...$this->compose_injectables($fn_params),
+                    ...$this->compose_parameters($route, $fn_params)
+                ]
+            );
+        }
+
+        return throw new \Exception("Invalid callable type.");
     }
 }
