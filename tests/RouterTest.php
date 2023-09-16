@@ -89,13 +89,90 @@ class RouterTestController
 
 final class RouterTest extends TestCase
 {
-    public function testSimpleRoute(): void
+    public function testSimpleGetRoute(): void
     {
         $_SERVER["REQUEST_URI"] = "/";
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
         $router->get("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimpleHeadRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "HEAD";
+
+        $router = new Router();
+        $router->head("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimplePostRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "POST";
+
+        $router = new Router();
+        $router->post("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimplePutRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "PUT";
+
+        $router = new Router();
+        $router->put("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimpleDeleteRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "DELETE";
+
+        $router = new Router();
+        $router->delete("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimplePatchRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "PATCH";
+
+        $router = new Router();
+        $router->patch("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimpleOptionsRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "OPTIONS";
+
+        $router = new Router();
+        $router->options("/", [RouterTestController::class, "index"]);
+
+        $this->assertSame("Hello, World!", $router->dispatch());
+    }
+
+    public function testSimpleTraceRoute(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/";
+        $_SERVER["REQUEST_METHOD"] = "TRACE";
+
+        $router = new Router();
+        $router->trace("/", [RouterTestController::class, "index"]);
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }

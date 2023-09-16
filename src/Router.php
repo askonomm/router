@@ -140,11 +140,7 @@ class Router
     {
         $reflection = new \ReflectionClass($class);
 
-        if ($reflection->getMethod($method)) {
-            return $reflection->getMethod($method)->getParameters();
-        }
-
-        return [];
+        return $reflection->getMethod($method)->getParameters();
     }
 
     /**
@@ -444,7 +440,5 @@ class Router
                 ]
             );
         }
-
-        return throw new \Exception("Invalid callable type.");
     }
 }
