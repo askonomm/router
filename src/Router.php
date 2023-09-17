@@ -204,12 +204,12 @@ class Router
 
         if (empty($injectables)) {
             return new $class;
-        } else {
-            $controller_class = new \ReflectionClass($class);
-            $instance = $controller_class->newInstanceArgs($injectables);
-
-            return $instance;
         }
+
+        $controller_class = new \ReflectionClass($class);
+        $instance = $controller_class->newInstanceArgs($injectables);
+
+        return $instance;
     }
 
     /**
