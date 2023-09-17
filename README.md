@@ -28,6 +28,8 @@ $router->dispatch();
 
 All HTTP methods are supported: `get`, `head`, `post`, `put`, `delete`, `patch`, `options`, `trace`. To catch any HTTP method, use `any`.
 
+To set a 404 handler, use the `not_found` method, which just takes a callable as its only argument.
+
 ### Callables
 
 You can pass 3 different types of callables to the router.
