@@ -165,7 +165,7 @@ class Router
         foreach ($method_params as $param) {
             $param_type = $param->getType();
 
-            if (!in_array($param_type->getName(), $this->non_injectables)) {
+            if ($param_type && !in_array($param_type->getName(), $this->non_injectables)) {
                 $injectables[] = $this->init_class($param_type->getName());
             }
         }
@@ -185,7 +185,7 @@ class Router
         foreach ($method_params as $method_param) {
             $param_type = $method_param->getType();
 
-            if (in_array($param_type->getName(), $this->non_injectables)) {
+            if (!$param_type || in_array($param_type->getName(), $this->non_injectables)) {
                 $parameters[] = $this->get_path_param($route, $method_param->getName());
             }
         }

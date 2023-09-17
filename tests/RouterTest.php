@@ -421,4 +421,17 @@ final class RouterTest extends TestCase
 
         $this->assertSame(null, $router->dispatch());
     }
+
+    public function testNoTypeHintedParameter(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test/123";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test/{id}", function ($id) {
+            return $id;
+        });
+
+        $this->assertSame("123", $router->dispatch());
+    }
 }
