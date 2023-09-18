@@ -50,7 +50,7 @@ class AdminController
 }
 
 $router = new Router();
-$router->get("/admin/login", [ExampleController::class, "hello"]);
+$router->get("/admin/login", [AdminController::class, "login"]);
 $router->dispatch();
 ```
 
