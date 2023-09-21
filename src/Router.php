@@ -11,12 +11,12 @@ class Router
     private string $path;
     private string $method;
     private array $routes = [];
-    private ?Route $not_found_route = null;
-    private array $non_injectables = ["string", "int", "float"];
+    private ?Route $notFoundRoute = null;
+    private array $nonInjectables = ["string", "int", "float"];
 
     public function __construct()
     {
-        $this->path = $this->normalize_path($_SERVER["REQUEST_URI"]);
+        $this->path = $this->normalizePath($_SERVER["REQUEST_URI"]);
         $this->method = $_SERVER["REQUEST_METHOD"];
     }
 
@@ -26,7 +26,7 @@ class Router
      * @param string $path
      * @return string
      */
-    private function normalize_path(string $path): string
+    private function normalizePath(string $path): string
     {
         return trim($path, "/");
     }
@@ -35,27 +35,27 @@ class Router
      * @param string $path
      * @return boolean
      */
-    private function match_path(string $path): bool
+    private function matchPath(string $path): bool
     {
-        $path = $this->normalize_path($path);
-        $split_input_path = explode("/", $this->path);
-        $split_route_path = explode("/", $path);
+        $path = $this->normalizePath($path);
+        $split_input_path = \explode("/", $this->path);
+        $split_route_path = \explode("/", $path);
 
-        if (count($split_input_path) !== count($split_route_path)) {
+        if (\count($split_input_path) !== \count($split_route_path)) {
             return false;
         }
 
         $matched_parts_count = 0;
 
-        for ($i = 0; $i < count($split_input_path); $i++) {
+        for ($i = 0; $i < \count($split_input_path); $i++) {
             $input_path_part = $split_input_path[$i];
             $route_path_part = $split_route_path[$i];
 
             // Required parameter check
             if (
-                str_starts_with($route_path_part, "{") &&
-                str_ends_with($route_path_part, "}") &&
-                strlen($input_path_part) > 0
+                \str_starts_with($route_path_part, "{") &&
+                \str_ends_with($route_path_part, "}") &&
+                \strlen($input_path_part) > 0
             ) {
                 $matched_parts_count++;
                 continue;
@@ -70,7 +70,7 @@ class Router
             }
         }
 
-        return $matched_parts_count === count($split_input_path);
+        return $matched_parts_count === \count($split_input_path);
     }
 
     /**
@@ -81,7 +81,7 @@ class Router
         foreach ($this->routes as $route) {
             $match_method = $route->method === $this->method || $route->method === "*";
 
-            if ($this->match_path($route->path) && $match_method) {
+            if ($this->matchPath($route->path) && $match_method) {
                 return $route;
             }
         }
@@ -94,20 +94,20 @@ class Router
      * @param string $name
      * @return string|null
      */
-    private function get_path_param(Route $route, string $name): ?string
+    private function getPathParam(Route $route, string $name): ?string
     {
-        $path = $this->normalize_path($route->path);
-        $split_input_path = explode("/", $this->path);
-        $split_route_path = explode("/", $path);
+        $path = $this->normalizePath($route->path);
+        $split_input_path = \explode("/", $this->path);
+        $split_route_path = \explode("/", $path);
         $index = null;
 
-        for ($i = 0; $i < count($split_route_path); $i++) {
+        for ($i = 0; $i < \count($split_route_path); $i++) {
             $route_path_part = $split_route_path[$i];
 
             if (
-                str_starts_with($route_path_part, "{") &&
-                str_ends_with($route_path_part, "}") &&
-                $name === trim($route_path_part, "{}")
+                \str_starts_with($route_path_part, "{") &&
+                \str_ends_with($route_path_part, "}") &&
+                $name === \trim($route_path_part, "{}")
             ) {
                 $index = $i;
                 break;
@@ -121,7 +121,7 @@ class Router
      * @param string $class
      * @return array
      */
-    private function get_constructor_params(string $class): array
+    private function getConstructorParams(string $class): array
     {
         $reflection = new \ReflectionClass($class);
 
@@ -136,7 +136,7 @@ class Router
      * @param Route $route
      * @return array
      */
-    private function get_method_params(string $class, string $method): array
+    private function getMethodParams(string $class, string $method): array
     {
         $reflection = new \ReflectionClass($class);
 
@@ -147,7 +147,7 @@ class Router
      * @param string $fn
      * @return array
      */
-    private function get_fn_params(string|Closure $fn): array
+    private function getFnParams(string|Closure $fn): array
     {
         $reflection = new \ReflectionFunction($fn);
 
@@ -158,15 +158,15 @@ class Router
      * @param array $method_params
      * @return array
      */
-    private function compose_injectables(array $method_params): array
+    private function composeInjectables(array $method_params): array
     {
         $injectables = [];
 
         foreach ($method_params as $param) {
             $param_type = $param->getType();
 
-            if ($param_type && !in_array($param_type->getName(), $this->non_injectables)) {
-                $injectables[] = $this->init_class($param_type->getName());
+            if ($param_type && !\in_array($param_type->getName(), $this->nonInjectables)) {
+                $injectables[] = $this->initClass($param_type->getName());
             }
         }
 
@@ -178,15 +178,15 @@ class Router
      * @param array $method_params
      * @return array
      */
-    private function compose_parameters(Route $route, array $method_params): array
+    private function composeParameters(Route $route, array $method_params): array
     {
         $parameters = [];
 
         foreach ($method_params as $method_param) {
             $param_type = $method_param->getType();
 
-            if (!$param_type || in_array($param_type->getName(), $this->non_injectables)) {
-                $parameters[] = $this->get_path_param($route, $method_param->getName());
+            if (!$param_type || \in_array($param_type->getName(), $this->nonInjectables)) {
+                $parameters[] = $this->getPathParam($route, $method_param->getName());
             }
         }
 
@@ -197,10 +197,10 @@ class Router
      * @param string $class
      * @return object
      */
-    private function init_class(string $class): object
+    private function initClass(string $class): object
     {
-        $constructor_params = $this->get_constructor_params($class);
-        $injectables = $this->compose_injectables($constructor_params);
+        $constructor_params = $this->getConstructorParams($class);
+        $injectables = $this->composeInjectables($constructor_params);
 
         if (empty($injectables)) {
             return new $class;
@@ -351,9 +351,9 @@ class Router
      * @param string|array|Closure $callable
      * @return void
      */
-    public function not_found(string|array|Closure $callable): void
+    public function notFound(string|array|Closure $callable): void
     {
-        $this->not_found_route = new Route(
+        $this->notFoundRoute = new Route(
             path: "",
             callable: $callable,
             method: "*"
@@ -367,8 +367,8 @@ class Router
     {
         // There are no routes
         if (empty($this->routes)) {
-            if ($this->not_found_route) {
-                $route = $this->not_found_route;
+            if ($this->notFoundRoute) {
+                $route = $this->notFoundRoute;
             } else {
                 return null;
             }
@@ -378,8 +378,8 @@ class Router
 
         // Route not found
         if (!$route) {
-            if ($this->not_found_route) {
-                $route = $this->not_found_route;
+            if ($this->notFoundRoute) {
+                $route = $this->notFoundRoute;
             } else {
                 return null;
             }
@@ -398,14 +398,14 @@ class Router
         // And if both exist, we proceed with controller and its method
         if (is_array($route->callable)) {
             [$controller, $action] = $route->callable;
-            $controller_instance = $this->init_class($controller);
-            $method_params = $this->get_method_params($controller, $action);
+            $controller_instance = $this->initClass($controller);
+            $method_params = $this->getMethodParams($controller, $action);
 
             return call_user_func_array(
                 [$controller_instance, $action],
                 [
-                    ...$this->compose_injectables($method_params),
-                    ...$this->compose_parameters($route, $method_params)
+                    ...$this->composeInjectables($method_params),
+                    ...$this->composeParameters($route, $method_params)
                 ]
             );
         }
@@ -417,26 +417,26 @@ class Router
 
         // And if it exists, we proceed with the function
         if (is_string($route->callable)) {
-            $fn_params = $this->get_fn_params($route->callable);
+            $fn_params = $this->getFnParams($route->callable);
 
             return call_user_func_array(
                 $route->callable,
                 [
-                    ...$this->compose_injectables($fn_params),
-                    ...$this->compose_parameters($route, $fn_params)
+                    ...$this->composeInjectables($fn_params),
+                    ...$this->composeParameters($route, $fn_params)
                 ]
             );
         }
 
         // If we have a closure, we proceed with the closure
         if ($route->callable instanceof \Closure) {
-            $fn_params = $this->get_fn_params($route->callable);
+            $fn_params = $this->getFnParams($route->callable);
 
             return call_user_func_array(
                 $route->callable,
                 [
-                    ...$this->compose_injectables($fn_params),
-                    ...$this->compose_parameters($route, $fn_params)
+                    ...$this->composeInjectables($fn_params),
+                    ...$this->composeParameters($route, $fn_params)
                 ]
             );
         }

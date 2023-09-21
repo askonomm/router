@@ -290,7 +290,7 @@ final class RouterTest extends TestCase
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->not_found([RouterTestController::class, "not_found"]);
+        $router->notFound([RouterTestController::class, "not_found"]);
 
         $this->assertSame("Not found.", $router->dispatch());
     }
