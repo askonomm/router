@@ -12,7 +12,7 @@ class Router
     private string $method;
     private array $routes = [];
     private ?Route $notFoundRoute = null;
-    private array $nonInjectables = ["string", "int", "float"];
+    private array $nonInjectables = ["string", "int", "float", "array"];
 
     public function __construct()
     {
