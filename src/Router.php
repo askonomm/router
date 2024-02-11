@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Asko\Router;
 
 use Closure;
+use ReflectionException;
 
 class Router
 {
@@ -120,6 +121,7 @@ class Router
     /**
      * @param string $class
      * @return array
+     * @throws ReflectionException
      */
     private function getConstructorParams(string $class): array
     {
@@ -133,8 +135,10 @@ class Router
     }
 
     /**
-     * @param Route $route
+     * @param string $class
+     * @param string $method
      * @return array
+     * @throws ReflectionException
      */
     private function getMethodParams(string $class, string $method): array
     {
@@ -144,8 +148,9 @@ class Router
     }
 
     /**
-     * @param string $fn
+     * @param string|Closure $fn
      * @return array
+     * @throws ReflectionException
      */
     private function getFnParams(string|Closure $fn): array
     {
@@ -157,6 +162,7 @@ class Router
     /**
      * @param array $method_params
      * @return array
+     * @throws ReflectionException
      */
     private function composeInjectables(array $method_params): array
     {
@@ -196,6 +202,7 @@ class Router
     /**
      * @param string $class
      * @return object
+     * @throws ReflectionException
      */
     private function initClass(string $class): object
     {
@@ -207,15 +214,13 @@ class Router
         }
 
         $controller_class = new \ReflectionClass($class);
-        $instance = $controller_class->newInstanceArgs($injectables);
 
-        return $instance;
+        return $controller_class->newInstanceArgs($injectables);
     }
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function get(string $path, string|array|Closure $callable): void
@@ -229,8 +234,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function head(string $path, string|array|Closure $callable): void
@@ -244,8 +248,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function post(string $path, string|array|Closure $callable): void
@@ -259,8 +262,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function put(string $path, string|array|Closure $callable): void
@@ -274,8 +276,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function delete(string $path, string|array|Closure $callable): void
@@ -289,8 +290,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function patch(string $path, string|array|Closure $callable): void
@@ -304,8 +304,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function options(string $path, string|array|Closure $callable): void
@@ -319,8 +318,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function trace(string $path, string|array|Closure $callable): void
@@ -334,8 +332,7 @@ class Router
 
     /**
      * @param string $path
-     * @param string $controller
-     * @param string $action
+     * @param string|array|Closure $callable
      * @return void
      */
     public function any(string $path, string|array|Closure $callable): void
@@ -361,17 +358,14 @@ class Router
     }
 
     /**
-     * @return void
+     * @return mixed
+     * @throws \Exception
      */
     public function dispatch(): mixed
     {
         // There are no routes
-        if (empty($this->routes)) {
-            if ($this->notFoundRoute) {
-                $route = $this->notFoundRoute;
-            } else {
-                return null;
-            }
+        if (empty($this->routes) && !$this->notFoundRoute) {
+            return null;
         }
 
         $route = $this->match();
