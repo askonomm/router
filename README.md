@@ -127,3 +127,37 @@ $router->dispatch();
 The above examples instantiates the `SomeDependency` class and injects it into the callable. All callable types are supported: Controller methods (and constructor methods!), functions and Closures.
 
 All injections are also recursive in nature, which means that the injected classes can also benefit from configuration-free dependency injection by type hinting injections in their respective constructor methods.
+
+### Middlewares
+
+Middlewares are a way to run code before the actual route is dispatched. You can use middlewares to check if a user is authenticated, or if a user has the right permissions to access a route, etc. Middlewares are added to the router by using the `middleware` method, like so:
+
+```php
+use Asko\Router\Router;
+
+class SomeMiddleware
+{
+    public function handle(string $who): string
+    {
+        return "intercepted, {$who}!";
+    }
+}
+
+$router = new Router();
+
+$router->get('/hello/{who}', function(string $who) {
+   return "Hello, {$who}!";
+})->middleware(SomeMiddleware::class);
+```
+
+When the above route is dispatched, the `SomeMiddleware` class will be instantiated and the `handle` method will be called. If the `handle` method returns anything other than `null`, the route will not be dispatched and the return value of the `handle` method will be returned instead.
+
+The `handle` method of a middleware also fully supports dependency injection, and can make use of the same parameters as in the route itself. 
+
+Additionally, you can pass multiple middleware classes by passing an array of classes to the `middleware` method, like so:
+
+```php
+$router->get('/', function() {
+   return "Hello, World";
+})->middleware([SomeMiddleware::class, AnotherMiddleware::class]);
+```
