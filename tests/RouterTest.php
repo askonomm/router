@@ -7,7 +7,7 @@ use Asko\Router\Router;
 
 class RouterTestDIDI
 {
-    public function test()
+    public function test(): string
     {
         return "Hello from DI with DI";
     }
@@ -18,7 +18,7 @@ class RouterTestDIWithDI
     public function __construct(public RouterTestDIDI $di)
     {
     }
-    public function test()
+    public function test(): string
     {
         return $this->di->test();
     }
@@ -41,47 +41,47 @@ class RouterTestController
         $this->di = $di;
     }
 
-    public function index()
+    public function index(): string
     {
         return "Hello, World!";
     }
 
-    public function test_parameter(string $id)
+    public function test_parameter(string $id): string
     {
         return $id;
     }
 
-    public function test_multiple_parameters(string $id, string $id2)
+    public function test_multiple_parameters(string $id, string $id2): string
     {
         return $id . "." . $id2;
     }
 
-    public function test_multiple_parameters2(string $id2, string $id)
+    public function test_multiple_parameters2(string $id2, string $id): string
     {
         return $id . "." . $id2;
     }
 
-    public function test_di(RouterTestDI $di)
+    public function test_di(RouterTestDI $di): string
     {
         return $di->test();
     }
 
-    public function test_di_with_parameter(RouterTestDI $di, int $id)
+    public function test_di_with_parameter(RouterTestDI $di, int $id): string
     {
         return $di->test() . ", " . $id;
     }
 
-    public function test_di_from_constructor()
+    public function test_di_from_constructor(): string
     {
         return $this->di->test();
     }
 
-    public function test_di_di_from_constructor(RouterTestDIWithDI $di)
+    public function test_di_di_from_constructor(RouterTestDIWithDI $di): string
     {
         return $di->test();
     }
 
-    public function not_found()
+    public function not_found(): string
     {
         return "Not found.";
     }

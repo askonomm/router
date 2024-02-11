@@ -9,12 +9,13 @@ use Closure;
 /**
  * A Route encapsulation class for the Router.
  */
-readonly class Route
+class Route
 {
     public function __construct(
         public string $path,
         public string|array|Closure $callable,
         public string $method,
+        public array $middlewares,
     ) {
     }
 }

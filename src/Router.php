@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Asko\Router;
 
 use Closure;
+use Exception;
 use ReflectionException;
 
 class Router
@@ -221,127 +222,154 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function get(string $path, string|array|Closure $callable): void
+    public function get(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "GET"
+            method: "GET",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function head(string $path, string|array|Closure $callable): void
+    public function head(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "HEAD"
+            method: "HEAD",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function post(string $path, string|array|Closure $callable): void
+    public function post(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "POST"
+            method: "POST",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function put(string $path, string|array|Closure $callable): void
+    public function put(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "PUT"
+            method: "PUT",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function delete(string $path, string|array|Closure $callable): void
+    public function delete(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "DELETE"
+            method: "DELETE",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function patch(string $path, string|array|Closure $callable): void
+    public function patch(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "PATCH"
+            method: "PATCH",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function options(string $path, string|array|Closure $callable): void
+    public function options(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "OPTIONS"
+            method: "OPTIONS",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function trace(string $path, string|array|Closure $callable): void
+    public function trace(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "TRACE"
+            method: "TRACE",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
      * @param string $path
      * @param string|array|Closure $callable
-     * @return void
+     * @return Router
      */
-    public function any(string $path, string|array|Closure $callable): void
+    public function any(string $path, string|array|Closure $callable): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
-            method: "*"
+            method: "*",
+            middlewares: []
         );
+
+        return $this;
     }
 
     /**
@@ -353,13 +381,33 @@ class Router
         $this->notFoundRoute = new Route(
             path: "",
             callable: $callable,
-            method: "*"
+            method: "*",
+            middlewares: []
         );
     }
 
     /**
+     * Add a middleware or middlewares to the route.
+     *
+     * @param array|string $middleware
+     * @return void
+     */
+    public function middleware(array|string $middleware): void
+    {
+        $route = $this->routes[\count($this->routes) - 1];
+
+        if (!\is_array($middleware)) {
+            $route->middlewares = [$middleware];
+        } else {
+            $route->middlewares = $middleware;
+        }
+
+        $this->routes[\count($this->routes) - 1] = $route;
+    }
+
+    /**
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function dispatch(): mixed
     {
@@ -379,14 +427,31 @@ class Router
             }
         }
 
+        // If we have middlewares, let's dispatch their `handle` method
+        foreach ($route->middlewares as $middleware) {
+            $middleware_instance = $this->initClass($middleware);
+            $method_params = $this->getMethodParams($middleware, "handle");
+            $result = call_user_func_array(
+                [$middleware_instance, "handle"],
+                [
+                    ...$this->composeInjectables($method_params),
+                    ...$this->composeParameters($route, $method_params)
+                ]
+            );
+
+            if ($result) {
+                return $result;
+            }
+        }
+
         // If we have a controller, check if it exists
         if (is_array($route->callable) && !class_exists($route->callable[0])) {
-            throw new \Exception("Class {$route->callable[0]} not found.");
+            throw new Exception("Class {$route->callable[0]} not found.");
         }
 
         // if we have a controller, check if its method exists
         if (is_array($route->callable) && !method_exists($route->callable[0], $route->callable[1])) {
-            throw new \Exception("Method {$route->callable[0]}::{$route->callable[1]} not found.");
+            throw new Exception("Method {$route->callable[0]}::{$route->callable[1]} not found.");
         }
 
         // And if both exist, we proceed with controller and its method
@@ -406,7 +471,7 @@ class Router
 
         // If we have a function name, check if it exists
         if (is_string($route->callable) && !function_exists($route->callable)) {
-            throw new \Exception("Function {$route->callable} not found.");
+            throw new Exception("Function {$route->callable} not found.");
         }
 
         // And if it exists, we proceed with the function

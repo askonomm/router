@@ -16,17 +16,28 @@ final class RouteTest extends TestCase
 {
     public function testGetRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "GET");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "GET",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("GET", $route->method);
         $this->assertSame(RouteTestController::class, $route->callable[0]);
         $this->assertSame("index", $route->callable[1]);
+        $this->assertSame([], $route->middlewares);
     }
 
     public function testHeadRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "HEAD");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "HEAD",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("HEAD", $route->method);
@@ -36,7 +47,12 @@ final class RouteTest extends TestCase
 
     public function testPostRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "POST");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "POST",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("POST", $route->method);
@@ -46,7 +62,12 @@ final class RouteTest extends TestCase
 
     public function testPutRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "PUT");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "PUT",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("PUT", $route->method);
@@ -56,7 +77,12 @@ final class RouteTest extends TestCase
 
     public function testDeleteRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "DELETE");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "DELETE",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("DELETE", $route->method);
@@ -66,7 +92,12 @@ final class RouteTest extends TestCase
 
     public function testPatchRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "PATCH");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "PATCH",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("PATCH", $route->method);
@@ -76,7 +107,12 @@ final class RouteTest extends TestCase
 
     public function testOptionsRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "OPTIONS");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "OPTIONS",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("OPTIONS", $route->method);
@@ -86,7 +122,12 @@ final class RouteTest extends TestCase
 
     public function testConnectRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "CONNECT");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "CONNECT",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("CONNECT", $route->method);
@@ -96,7 +137,12 @@ final class RouteTest extends TestCase
 
     public function testTraceRoute(): void
     {
-        $route = new Route("/", [RouteTestController::class, "index"], "TRACE");
+        $route = new Route(
+            path: "/",
+            callable: [RouteTestController::class, "index"],
+            method: "TRACE",
+            middlewares: []
+        );
 
         $this->assertSame("/", $route->path);
         $this->assertSame("TRACE", $route->method);
