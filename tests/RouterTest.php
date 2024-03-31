@@ -434,4 +434,17 @@ final class RouterTest extends TestCase
 
         $this->assertSame("123", $router->dispatch());
     }
+
+    public function testWithQueryParams(): void
+    {
+        $_SERVER["REQUEST_URI"] = "/test?name=John&age=30";
+        $_SERVER["REQUEST_METHOD"] = "GET";
+
+        $router = new Router();
+        $router->get("/test", function () {
+            return "Still works!";
+        });
+
+        $this->assertSame("Still works!", $router->dispatch());
+    }
 }

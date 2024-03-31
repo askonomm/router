@@ -30,7 +30,7 @@ class Router
      */
     private function normalizePath(string $path): string
     {
-        return trim($path, "/");
+        return explode('?', trim($path, "/"))[0] ?? "/";
     }
 
     /**
