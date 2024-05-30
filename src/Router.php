@@ -24,7 +24,7 @@ class Router
 
     /**
      * Normalizes the path by removing leading and trailing slashes.
-     * 
+     *
      * @param string $path
      * @return string
      */
@@ -61,9 +61,14 @@ class Router
             ) {
                 $matched_parts_count++;
                 continue;
-            }
+            } // Wildcard parameter check
+            else if ($route_path_part === "*") {
+                $matched_parts_count++;
 
-            // 1:1 match
+                // If we have a wildcard, we can break the loop
+                // because it will match everything
+                break;
+            } // 1:1 match
             else {
                 if ($input_path_part === $route_path_part) {
                     $matched_parts_count++;
@@ -222,15 +227,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function get(string $path, string|array|Closure $callable): Router
+    public function get(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "GET",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -239,15 +245,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function head(string $path, string|array|Closure $callable): Router
+    public function head(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "HEAD",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -256,15 +263,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function post(string $path, string|array|Closure $callable): Router
+    public function post(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "POST",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -273,15 +281,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function put(string $path, string|array|Closure $callable): Router
+    public function put(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "PUT",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -290,15 +299,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function delete(string $path, string|array|Closure $callable): Router
+    public function delete(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "DELETE",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -307,15 +317,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function patch(string $path, string|array|Closure $callable): Router
+    public function patch(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "PATCH",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -324,15 +335,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function options(string $path, string|array|Closure $callable): Router
+    public function options(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "OPTIONS",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -341,15 +353,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function trace(string $path, string|array|Closure $callable): Router
+    public function trace(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "TRACE",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -358,15 +371,16 @@ class Router
     /**
      * @param string $path
      * @param string|array|Closure $callable
+     * @param array $middlewares
      * @return Router
      */
-    public function any(string $path, string|array|Closure $callable): Router
+    public function any(string $path, string|array|Closure $callable, array $middlewares = []): Router
     {
         $this->routes[] = new Route(
             path: $path,
             callable: $callable,
             method: "*",
-            middlewares: []
+            middlewares: $middlewares
         );
 
         return $this;
@@ -384,25 +398,6 @@ class Router
             method: "*",
             middlewares: []
         );
-    }
-
-    /**
-     * Add a middleware or middlewares to the route.
-     *
-     * @param array|string $middleware
-     * @return void
-     */
-    public function middleware(array|string $middleware): void
-    {
-        $route = $this->routes[\count($this->routes) - 1];
-
-        if (!\is_array($middleware)) {
-            $route->middlewares = [$middleware];
-        } else {
-            $route->middlewares = $middleware;
-        }
-
-        $this->routes[\count($this->routes) - 1] = $route;
     }
 
     /**

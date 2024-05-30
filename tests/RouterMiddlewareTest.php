@@ -26,41 +26,59 @@ class TestParamsMiddleware {
 
 class RouterMiddlewareTest extends TestCase
 {
+    /**
+     * @throws Exception
+     */
     public function testNoActionMiddleware()
     {
         $_SERVER["REQUEST_URI"] = "/test";
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", function () {
-            return "Hello, World!";
-        })->middleware(TestNoActionMiddleware::class);
+
+        $router->get(
+            path: "/test",
+            callable: fn () => "Hello, World!",
+            middlewares: [TestNoActionMiddleware::class]
+        );
 
         $this->assertSame("Hello, World!", $router->dispatch());
     }
 
+    /**
+     * @throws Exception
+     */
     public function testActionMiddleware()
     {
         $_SERVER["REQUEST_URI"] = "/test";
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/test", function () {
-            return "Hello, World!";
-        })->middleware(TestActionMiddleware::class);
+
+        $router->get(
+            path: "/test",
+            callable: fn () => "Hello, World!",
+            middlewares: [TestActionMiddleware::class]
+        );
 
         $this->assertSame("Hello, John!", $router->dispatch());
     }
 
+    /**
+     * @throws Exception
+     */
     public function testMiddlewareWithParams()
     {
         $_SERVER["REQUEST_URI"] = "/hello/John";
         $_SERVER["REQUEST_METHOD"] = "GET";
 
         $router = new Router();
-        $router->get("/hello/{who}", function () {
-            return "Hello, World!";
-        })->middleware(TestParamsMiddleware::class);
+
+        $router->get(
+            path: "/hello/{who}",
+            callable: fn () => "Hello, World!",
+            middlewares: [TestParamsMiddleware::class]
+        );
 
         $this->assertSame("Hello, John!", $router->dispatch());
     }

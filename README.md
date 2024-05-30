@@ -145,19 +145,13 @@ class SomeMiddleware
 
 $router = new Router();
 
-$router->get('/hello/{who}', function(string $who) {
-   return "Hello, {$who}!";
-})->middleware(SomeMiddleware::class);
+$router->get(
+    path: '/hello/{who}', 
+    callable: fn(string $who) => "Hello, {$who}!",
+    middlewares: [SomeMiddleware::class]
+});
 ```
 
 When the above route is dispatched, the `SomeMiddleware` class will be instantiated and the `handle` method will be called. If the `handle` method returns anything other than `null`, the route will not be dispatched and the return value of the `handle` method will be returned instead.
 
-The `handle` method of a middleware also fully supports dependency injection, and can make use of the same parameters as in the route itself. 
-
-Additionally, you can pass multiple middleware classes by passing an array of classes to the `middleware` method, like so:
-
-```php
-$router->get('/', function() {
-   return "Hello, World";
-})->middleware([SomeMiddleware::class, AnotherMiddleware::class]);
-```
+The `handle` method of a middleware also fully supports dependency injection, and can make use of the same parameters as in the route itself.
